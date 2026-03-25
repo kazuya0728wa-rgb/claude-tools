@@ -1,0 +1,5 @@
+# Task: Open index.html and verify content
+
+- [ ] Open `file:///c:/Users/kazuy/.gemini/antigravity/index.html` in browser
+- [ ] Verify if "Hello World!" is displayed
+- [ ] Report success to user

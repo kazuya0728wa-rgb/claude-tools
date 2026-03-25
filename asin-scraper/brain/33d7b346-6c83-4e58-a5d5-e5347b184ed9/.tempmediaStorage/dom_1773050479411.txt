@@ -1,0 +1,32 @@
+<current_dom_explanation>
+This is a temporary snapshot of the current page's DOM structure. The DOM will change if you navigate to or interact with another page. Use a tool like browser_get_dom to capture and preserve the DOM in your trajectory if needed for later reference.
+</current_dom_explanation>
+<current_dom>
+[0] (74,47)<a class='MV3Tnb' href='https://about.google/?fg=1&utm_source=google-JP&utm_medium=referral&utm_campaign=hp-header'>Googleについて />
+[1] (162,47)<a class='MV3Tnb' href='https://store.google.com/JP?utm_source=hp_header&utm_medium=google_ooo&utm_campaign=GS100042&hl=ja-JP'>ストア />
+[2] (792,44)<a aria-label='Gmail ' class='gb_Z' href='https://mail.google.com/mail/&ogbl'>Gmail />
+[3] (835,44)<a aria-label='画像を検索する ' class='gb_Z' href='https://www.google.com/imghp?hl=ja&ogbl'>画像 />
+[4] (881,44)<a aria-label='Google アプリ' class='gb_B' href='https://www.google.co.jp/intl/ja/about/products' role='button' />
+[5] (949,44)<a aria-label='ログイン' class='gb_A' href='https://accounts.google.com/ServiceLogin?hl=ja&passive=true&continue=https://www.google.com/&ec=futura_exp_og_so_72776762_e'>ログイン />
+	ログイン
+[6] (193,319)<button aria-label='ファイルまたは画像をアップロード' class='UbbAWe' />
+	[7] (193,319)<span  />
+[8] (428,319)<textarea aria-label='検索' class='gLFyf' id='APjFqb' role='combobox' title='検索' />
+[9] (659,319)<div aria-label='音声で検索' class='XDyW0e' role='button' />
+[10] (697,319)<div aria-label='画像で検索' class='nDcEnd' role='button' />
+[11] (774,319)<button class='plR5qb Y5MKCd' role='link' />
+	[12] (774,319)<div  />
+		[13] (742,319)<span  />
+		[14] (784,319)<span >AI モード />
+[15] (426,433)<input aria-label='Google 検索' class='gNO89b' role='button' />
+[16] (559,435)<input aria-label='I'm Feeling Lucky' id='gbqfbb' role='button' />
+日本
+[17] (211,961)<a class='pHiOh' href='https://www.google.com/intl/ja_jp/ads/?subid=ww-ww-et-g-awa-a-g_hpafoot1_1!o2&utm_source=google.com&utm_medium=referral&utm_campaign=google_hpafooter&fg=1'>広告 />
+[18] (280,961)<a class='pHiOh' href='https://www.google.com/services/?subid=ww-ww-et-g-awa-a-g_hpbfoot1_1!o2&utm_source=google.com&utm_medium=referral&utm_campaign=google_hpbfooter&fg=1'>ビジネス />
+[19] (377,961)<a class='pHiOh' href='https://google.com/search/howsearchworks/?fg=1'>検索の仕組み />
+[20] (650,961)<a class='pHiOh' href='https://policies.google.com/privacy?hl=ja&fg=1'>プライバシー />
+[21] (733,961)<a class='pHiOh' href='https://policies.google.com/terms?hl=ja&fg=1'>規約 />
+[22] (789,961)<div class='CcNe6e' role='button' />
+	[23] (789,961)<div >設定 />
+
+</current_dom>

@@ -1,0 +1,6 @@
+openai-whisper
+yt-dlp
+pyannote.audio
+openai
+python-dotenv
+torch

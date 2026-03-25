@@ -1,0 +1,10 @@
+# AIを用いた付属品抽出機能の開発
+
+- [x] 必要なライブラリ(`pymupdf`, `google-genai`)を [requirements.txt](file:///c:/Users/kazuy/.gemini/antigravity/requirements.txt) に追加する
+- [x] Gemini APIを用いたプロトタイプスクリプト ([test_pdf_extractor.py](file:///c:/Users/kazuy/.gemini/antigravity/test_pdf_extractor.py)) を作成する
+- [x] テスト用PDFを用いてプロトタイプスクリプトを実行し、結果を確認する（ダミー実行完了、ユーザー環境での実データテスト待ち）
+- [x] ウェブページ（Amazon商品ページ）からAIで付属品を抽出するプロトタイプ ([test_web_extractor.py](file:///c:/Users/kazuy/.gemini/antigravity/test_web_extractor.py)) を作成する
+- [x] ASIN "B074WTMCDJ" を使用して、ウェブページからの抽出をテストする
+- [ ] 既存のシステムへの統合（要検討）
+- [ ] 既存のシステムへの統合（要検討）
+- [ ] 既存のシステムへの統合（要検討）

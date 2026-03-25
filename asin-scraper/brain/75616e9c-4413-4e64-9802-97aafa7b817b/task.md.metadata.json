@@ -1,0 +1,5 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_TASK",
+  "summary":  "取扱説明書からAI（Gemini API）を用いて付属品を抽出する機能の作成タスクです。プロトタイプの作成、動作確認を行います。",
+  "updatedAt":  "2026-03-09T19:54:40.538939300Z"
+}
