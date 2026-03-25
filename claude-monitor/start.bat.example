@@ -1,0 +1,17 @@
+@echo off
+chcp 65001 >/dev/null
+
+rem === Discord Bot Settings ===
+rem Discord Developer Portal で取得した値を設定してください
+set CLAUDE_MONITOR_DISCORD_TOKEN=YOUR_BOT_TOKEN_HERE
+set CLAUDE_MONITOR_CHANNEL_ID=YOUR_MONITOR_CHANNEL_ID
+set CLAUDE_MONITOR_GUILD_ID=YOUR_GUILD_ID
+
+rem === Tool Share Settings ===
+set TOOL_SHARE_CHANNEL_ID=1486204546370899978
+set TOOL_SHARE_USER_NAME=あなたの名前
+set TOOL_SHARE_GITHUB_URL=https://github.com/YOUR_USER/YOUR_REPO
+
+cd /d "%~dp0"
+python bot.py
+pause

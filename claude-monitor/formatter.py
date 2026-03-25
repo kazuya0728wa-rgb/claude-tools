@@ -190,31 +190,34 @@ def build_daily_digest_embed(
         )
         return embed
 
-    lines = []
     new_count = sum(1 for t in tools if t["status"] == "新規")
     update_count = sum(1 for t in tools if t["status"] == "更新")
 
-    for tool in tools:
-        status_emoji = "\U0001f195" if tool["status"] == "新規" else "\U0001f504"
-        lines.append(f"{status_emoji} **{tool['name']}**（{tool['status']}）")
-        lines.append(f"　　→ {tool['description']}")
+    summary_parts = []
+    if new_count:
+        summary_parts.append(f"\U0001f195 新規 {new_count}件")
+    if update_count:
+        summary_parts.append(f"\U0001f504 更新 {update_count}件")
 
     embed = discord.Embed(
         title=f"\U0001f6e0\ufe0f {user_name}のツール活動",
-        description="\n".join(lines),
+        description="　".join(summary_parts),
         color=0x5865F2,
         timestamp=datetime.now(timezone.utc),
     )
 
-    summary_parts = []
-    if new_count:
-        summary_parts.append(f"新規 {new_count}件")
-    if update_count:
-        summary_parts.append(f"更新 {update_count}件")
-    embed.set_footer(text=" | ".join(summary_parts))
+    for tool in tools:
+        status_tag = "\U0001f195 NEW" if tool["status"] == "新規" else "\U0001f504 更新"
+        embed.add_field(
+            name=f"{tool['name']}（{status_tag}）",
+            value=tool["description"],
+            inline=False,
+        )
 
     if github_url:
         embed.add_field(name="\U0001f517 GitHub", value=github_url, inline=False)
+
+    embed.set_footer(text=f"全{len(tools)}件")
 
     return embed
 

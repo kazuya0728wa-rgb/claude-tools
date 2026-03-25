@@ -11,28 +11,34 @@ JST = timezone(timedelta(hours=9))
 SKIP_DIRS = {"__pycache__", "node_modules", ".next", ".git", "未分類", "system"}
 
 
+TOOL_DESCRIPTIONS = {
+    "3link": "株式会社スリーンクの案件・依頼者・クライアントを一元管理。Google Sheets + GAS WebAppでブラウザから操作できる業務システム",
+    "asin-scraper": "Amazon ASINから付属品情報を自動調査してスプレッドシートに追記。EC物販の商品リサーチを効率化",
+    "auto-classify": "テキストやデータをAIで自動分類。手作業の仕分け作業を自動化",
+    "claude-monitor": "Claude Codeの操作をDiscordにリアルタイム通知＆スマホから承認・指示できるモニタリングBot",
+    "flowsync-lp": "FlowSync（業務自動化サービス）のランディングページ",
+    "gmail-sender": "PythonからGmail APIで自動メール送信。テンプレートメールの一括送信などに使用",
+    "sheets": "Google Sheets APIとGAS（Apps Script）をCLIから操作。シート読み書き・GASコードの取得更新",
+    "transcribe-tool": "音声・動画ファイルのURLからテキストを自動文字起こし",
+}
+
+
 def _get_tool_description(tool_dir: str) -> str:
-    """Extract tool description from README.md or main Python file."""
+    """Get tool description from manual registry, fallback to README."""
+    name = os.path.basename(tool_dir)
+
+    # Use manual description if available
+    if name in TOOL_DESCRIPTIONS:
+        return TOOL_DESCRIPTIONS[name]
+
+    # Fallback: README title
     readme = os.path.join(tool_dir, "README.md")
     if os.path.isfile(readme):
         with open(readme, "r", encoding="utf-8", errors="replace") as f:
-            lines = f.readlines()
-        for line in lines:
-            stripped = line.strip()
-            # Skip title lines and empty lines
-            if stripped and not stripped.startswith("#") and not stripped.startswith("---"):
-                return stripped[:100]
-
-    # Fallback: look for docstring in main .py file
-    for fname in ("main.py", "bot.py", "app.py", "send.py", "classify.py"):
-        fpath = os.path.join(tool_dir, fname)
-        if os.path.isfile(fpath):
-            with open(fpath, "r", encoding="utf-8", errors="replace") as f:
-                content = f.read(500)
-            if '"""' in content:
-                start = content.index('"""') + 3
-                end = content.index('"""', start) if '"""' in content[start:] else start + 80
-                return content[start:end].strip().split("\n")[0][:100]
+            for line in f:
+                stripped = line.strip()
+                if stripped.startswith("# ") and not stripped.startswith("##"):
+                    return stripped.lstrip("# ").strip()[:120]
 
     return "説明なし"
 
