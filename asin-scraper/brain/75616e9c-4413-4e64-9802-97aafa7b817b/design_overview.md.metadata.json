@@ -1,5 +1,0 @@
-{
-  "artifactType":  "ARTIFACT_TYPE_OTHER",
-  "summary":  "Amazon ASIN付属品調査ツールの現在の設計概要をまとめたドキュメント。ファイル構成、処理フロー、データの入出力、既知の問題（APIレートリミット）について記載。",
-  "updatedAt":  "2026-03-10T09:14:44.825171100Z"
-}

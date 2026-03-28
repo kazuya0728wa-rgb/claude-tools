@@ -13,6 +13,9 @@ DISCORD_GUILD_ID = int(os.environ.get("CLAUDE_MONITOR_GUILD_ID", "0"))
 # Tool share channel (daily digest)
 TOOL_SHARE_CHANNEL_ID = int(os.environ.get("TOOL_SHARE_CHANNEL_ID", "0"))
 
+# AI Digest channel (defaults to main channel if not set)
+AI_DIGEST_CHANNEL_ID = int(os.environ.get("AI_DIGEST_CHANNEL_ID", "0"))
+
 # Daily digest schedule (JST)
 DAILY_DIGEST_HOUR = 8  # 朝8時
 DAILY_DIGEST_MINUTE = 0
@@ -42,6 +45,9 @@ READ_ONLY_TOOLS = frozenset({
 # Maximum characters for Discord embed fields
 MAX_EMBED_FIELD_LENGTH = 1024
 MAX_CODE_BLOCK_LENGTH = 900  # Leave room for ```lang\n...\n``` wrapper
+
+# Tool catalog (detailed descriptions for card-style sharing)
+TOOL_CATALOG_FILE = os.path.join(BASE_DIR, "tool_catalog.yaml")
 
 # Log file
 LOG_FILE = os.path.join(BASE_DIR, "monitor.log")

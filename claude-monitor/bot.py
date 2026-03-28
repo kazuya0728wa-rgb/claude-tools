@@ -11,6 +11,7 @@ from discord import app_commands, ui
 from discord.ext import tasks
 
 from config import (
+    AI_DIGEST_CHANNEL_ID,
     APPROVAL_TIMEOUT_SECONDS,
     DAILY_DIGEST_HOUR,
     DAILY_DIGEST_MINUTE,
@@ -26,14 +27,21 @@ from config import (
     USER_DISPLAY_NAME,
 )
 from formatter import (
+    build_ai_detail_embed,
+    build_ai_digest_embed,
     build_all_tools_embed,
+    build_catalog_summary_embed,
+    build_code_error_embed,
+    build_code_shared_embed,
     build_daily_digest_embed,
     build_post_tool_embed,
     build_pre_tool_embed,
     build_stop_embed,
+    build_tool_card_embed,
     build_waiting_embed,
 )
-from tool_tracker import get_all_tools, scan_tools
+from github_pusher import get_tool_github_url, is_tool_shared, push_tool
+from tool_tracker import get_all_tools, get_shareable_tools, scan_tools
 
 logging.basicConfig(
     level=logging.INFO,
@@ -198,6 +206,75 @@ class WaitingView(ui.View):
 
 
 # ---------------------------------------------------------------------------
+# AI Digest UI Components
+# ---------------------------------------------------------------------------
+
+class DigestCategoryButton(ui.Button):
+    """Button for a single AI digest category — shows detail on click."""
+
+    def __init__(self, category: dict):
+        emoji = category.get("emoji", "\U0001f4e6")
+        name = category.get("name", "")
+        item_count = len(category.get("items", []))
+        super().__init__(
+            label=f"{name} ({item_count})",
+            style=discord.ButtonStyle.secondary,
+            emoji=emoji,
+        )
+        self.category = category
+
+    async def callback(self, interaction: discord.Interaction):
+        embed = build_ai_detail_embed(self.category)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+class DigestDetailView(ui.View):
+    """View with category buttons for AI digest — up to 5 buttons."""
+
+    def __init__(self, categories: list[dict]):
+        super().__init__(timeout=None)  # Persistent buttons
+        for cat in categories[:5]:  # Discord allows max 5 buttons per row
+            if cat.get("items"):
+                self.add_item(DigestCategoryButton(cat))
+
+
+# ---------------------------------------------------------------------------
+# Tool Catalog UI Components
+# ---------------------------------------------------------------------------
+
+class ToolCardView(ui.View):
+    """Persistent view with 'コードが欲しい' button for a single tool."""
+
+    def __init__(self, tool_key: str):
+        super().__init__(timeout=None)
+        self.tool_key = tool_key
+        # Set custom_id for persistence across bot restarts
+        self.request_btn.custom_id = f"tool_request:{tool_key}"
+
+    @ui.button(label="コードが欲しい", style=discord.ButtonStyle.green, emoji="\U0001f4e5")
+    async def request_btn(self, interaction: discord.Interaction, button: ui.Button):
+        await interaction.response.defer(ephemeral=True)
+
+        # Check if already shared
+        existing_url = get_tool_github_url(self.tool_key)
+        if existing_url:
+            embed = build_code_shared_embed(self.tool_key, existing_url)
+            embed.title = f"\U0001f4e4 {self.tool_key} は既にGitHubで公開中です"
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            return
+
+        # Push to GitHub
+        success, result = await push_tool(self.tool_key)
+        if success:
+            embed = build_code_shared_embed(self.tool_key, result)
+            # Also post publicly so others can see
+            await interaction.followup.send(embed=embed)
+        else:
+            embed = build_code_error_embed(self.tool_key, result)
+            await interaction.followup.send(embed=embed, ephemeral=True)
+
+
+# ---------------------------------------------------------------------------
 # Discord Bot
 # ---------------------------------------------------------------------------
 
@@ -214,6 +291,12 @@ class MonitorBot(discord.Client):
 
     async def setup_hook(self):
         self._register_commands()
+
+        # Register persistent views for tool card buttons
+        shareable = get_shareable_tools()
+        for tool in shareable:
+            self.add_view(ToolCardView(tool["key"]))
+
         if DISCORD_GUILD_ID:
             guild = discord.Object(id=DISCORD_GUILD_ID)
             self.tree.copy_global_to(guild=guild)
@@ -259,14 +342,47 @@ class MonitorBot(discord.Client):
         @self.tree.command(name="tools", description="全ツール一覧を表示")
         async def tools_cmd(interaction: discord.Interaction):
             all_tools = get_all_tools()
-            embed = build_all_tools_embed(USER_DISPLAY_NAME, all_tools, GITHUB_REPO_URL)
+            embed = build_all_tools_embed(USER_DISPLAY_NAME, all_tools)
             await interaction.response.send_message(embed=embed)
 
         @self.tree.command(name="digest", description="今日のツール活動レポートを手動送信")
         async def digest_cmd(interaction: discord.Interaction):
             tools = scan_tools()
-            embed = build_daily_digest_embed(USER_DISPLAY_NAME, tools, GITHUB_REPO_URL)
+            embed = build_daily_digest_embed(USER_DISPLAY_NAME, tools)
             await interaction.response.send_message(embed=embed)
+            # Send individual tool cards with buttons
+            for tool in tools:
+                catalog = tool.get("catalog")
+                if catalog:
+                    card_data = dict(catalog)
+                    card_data["key"] = tool["name"]
+                    card_data["shared"] = is_tool_shared(tool["name"])
+                    card_data["github_url"] = get_tool_github_url(tool["name"]) or ""
+                    card_embed = build_tool_card_embed(card_data)
+                    if catalog.get("shareable", False):
+                        view = ToolCardView(tool["name"])
+                        await interaction.channel.send(embed=card_embed, view=view)
+                    else:
+                        await interaction.channel.send(embed=card_embed)
+
+        @self.tree.command(name="catalog", description="共有可能なツールカタログを表示")
+        async def catalog_cmd(interaction: discord.Interaction):
+            shareable = get_shareable_tools()
+            if not shareable:
+                await interaction.response.send_message("共有可能なツールがありません。")
+                return
+
+            summary = build_catalog_summary_embed(
+                USER_DISPLAY_NAME, len(shareable), len(shareable)
+            )
+            await interaction.response.send_message(embed=summary)
+
+            for tool in shareable:
+                tool["shared"] = is_tool_shared(tool["key"])
+                tool["github_url"] = get_tool_github_url(tool["key"]) or ""
+                card_embed = build_tool_card_embed(tool)
+                view = ToolCardView(tool["key"])
+                await interaction.channel.send(embed=card_embed, view=view)
 
     @tasks.loop(minutes=1)
     async def daily_digest_loop(self):
@@ -281,15 +397,32 @@ class MonitorBot(discord.Client):
         log.info(f"Daily digest scheduler started (JST {DAILY_DIGEST_HOUR:02d}:{DAILY_DIGEST_MINUTE:02d})")
 
     async def _send_daily_digest(self):
-        """Send the daily tool digest to the share channel."""
+        """Send the daily tool digest to the share channel with card embeds."""
         channel = await self.get_share_channel_safe()
         if not channel:
             log.warning("Tool share channel not found, skipping digest")
             return
 
         tools = scan_tools()
-        embed = build_daily_digest_embed(USER_DISPLAY_NAME, tools, GITHUB_REPO_URL)
+        # Summary embed
+        embed = build_daily_digest_embed(USER_DISPLAY_NAME, tools)
         await channel.send(embed=embed)
+
+        # Individual tool cards with buttons
+        for tool in tools:
+            catalog = tool.get("catalog")
+            if catalog:
+                card_data = dict(catalog)
+                card_data["key"] = tool["name"]
+                card_data["shared"] = is_tool_shared(tool["name"])
+                card_data["github_url"] = get_tool_github_url(tool["name"]) or ""
+                card_embed = build_tool_card_embed(card_data)
+                if catalog.get("shareable", False):
+                    view = ToolCardView(tool["name"])
+                    await channel.send(embed=card_embed, view=view)
+                else:
+                    await channel.send(embed=card_embed)
+
         log.info(f"Daily digest sent: {len(tools)} tools reported")
 
     async def on_ready(self):
@@ -325,6 +458,14 @@ class MonitorBot(discord.Client):
         if self._share_channel is None and TOOL_SHARE_CHANNEL_ID:
             self._share_channel = self.get_channel(TOOL_SHARE_CHANNEL_ID)
         return self._share_channel
+
+    async def get_digest_channel_safe(self) -> discord.TextChannel | None:
+        """Get channel for AI digest. Falls back to main channel."""
+        if AI_DIGEST_CHANNEL_ID:
+            ch = self.get_channel(AI_DIGEST_CHANNEL_ID)
+            if ch:
+                return ch
+        return await self.get_channel_safe()
 
 
 # ---------------------------------------------------------------------------
@@ -391,6 +532,24 @@ class HookHandler:
         log.info(f"PostToolUse: {tool_name}")
         return web.json_response({"status": "ok"})
 
+    async def handle_ai_digest(self, request: web.Request) -> web.Response:
+        """Receive AI news digest and post to Discord with category buttons."""
+        data = await request.json()
+        categories = data.get("categories", [])
+        log.info(f"AI Digest received: {len(categories)} categories")
+
+        channel = await self.bot.get_digest_channel_safe()
+        if not channel:
+            log.warning("Digest channel not found")
+            return web.json_response({"status": "error", "reason": "channel not found"})
+
+        embed = build_ai_digest_embed(data)
+        view = DigestDetailView(categories)
+        await channel.send(embed=embed, view=view)
+
+        log.info("AI Digest sent to Discord")
+        return web.json_response({"status": "ok"})
+
     async def handle_stop(self, request: web.Request) -> web.Response:
         data = await request.json()
         project_dir = data.get("project_dir", "")
@@ -421,6 +580,7 @@ async def main():
     app.router.add_post("/pre_tool", handler.handle_pre_tool)
     app.router.add_post("/post_tool", handler.handle_post_tool)
     app.router.add_post("/stop", handler.handle_stop)
+    app.router.add_post("/ai-digest", handler.handle_ai_digest)
 
     runner = web.AppRunner(app)
     await runner.setup()

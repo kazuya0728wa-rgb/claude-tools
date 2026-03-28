@@ -3,33 +3,99 @@
 import os
 from datetime import datetime, timezone, timedelta
 
-from config import TOOLS_DIR
+from config import TOOL_CATALOG_FILE, TOOLS_DIR
 
 JST = timezone(timedelta(hours=9))
 
 # Directories to skip
 SKIP_DIRS = {"__pycache__", "node_modules", ".next", ".git", "未分類", "system"}
 
+# health_config.yaml からツール説明を読み込み（単一正規ソース）
+_YAML_DESCRIPTIONS: dict[str, str] | None = None
 
-TOOL_DESCRIPTIONS = {
-    "3link": "株式会社スリーンクの案件・依頼者・クライアントを一元管理。Google Sheets + GAS WebAppでブラウザから操作できる業務システム",
-    "asin-scraper": "Amazon ASINから付属品情報を自動調査してスプレッドシートに追記。EC物販の商品リサーチを効率化",
-    "auto-classify": "テキストやデータをAIで自動分類。手作業の仕分け作業を自動化",
-    "claude-monitor": "Claude Codeの操作をDiscordにリアルタイム通知＆スマホから承認・指示できるモニタリングBot",
-    "flowsync-lp": "FlowSync（業務自動化サービス）のランディングページ",
-    "gmail-sender": "PythonからGmail APIで自動メール送信。テンプレートメールの一括送信などに使用",
-    "sheets": "Google Sheets APIとGAS（Apps Script）をCLIから操作。シート読み書き・GASコードの取得更新",
-    "transcribe-tool": "音声・動画ファイルのURLからテキストを自動文字起こし",
-}
+# tool_catalog.yaml からカタログ情報を読み込み
+_CATALOG: dict[str, dict] | None = None
+
+
+def _load_yaml_descriptions() -> dict[str, str]:
+    """health_config.yaml の tools.*.description を読み込む"""
+    global _YAML_DESCRIPTIONS
+    if _YAML_DESCRIPTIONS is not None:
+        return _YAML_DESCRIPTIONS
+
+    _YAML_DESCRIPTIONS = {}
+    yaml_path = os.path.join(TOOLS_DIR, "tool-health-monitor", "health_config.yaml")
+    if not os.path.exists(yaml_path):
+        return _YAML_DESCRIPTIONS
+
+    try:
+        import yaml
+        with open(yaml_path, "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f)
+        for tool_name, tool_config in config.get("tools", {}).items():
+            desc = tool_config.get("description", "")
+            if desc:
+                _YAML_DESCRIPTIONS[tool_name] = desc
+    except Exception:
+        pass
+
+    return _YAML_DESCRIPTIONS
+
+
+def _load_catalog() -> dict[str, dict]:
+    """Load tool_catalog.yaml for card-style sharing."""
+    global _CATALOG
+    if _CATALOG is not None:
+        return _CATALOG
+
+    _CATALOG = {}
+    if not os.path.exists(TOOL_CATALOG_FILE):
+        return _CATALOG
+
+    try:
+        import yaml
+        with open(TOOL_CATALOG_FILE, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+        _CATALOG = data.get("tools", {})
+    except Exception:
+        pass
+
+    return _CATALOG
+
+
+def reload_catalog() -> None:
+    """Force reload catalog from disk (used after edits)."""
+    global _CATALOG
+    _CATALOG = None
+    _load_catalog()
+
+
+def get_catalog_entry(tool_name: str) -> dict | None:
+    """Get detailed catalog entry for a tool."""
+    catalog = _load_catalog()
+    return catalog.get(tool_name)
+
+
+def get_shareable_tools() -> list[dict]:
+    """Get all tools marked as shareable in the catalog."""
+    catalog = _load_catalog()
+    results = []
+    for key, entry in catalog.items():
+        if entry.get("shareable", False):
+            tool = dict(entry)
+            tool["key"] = key
+            results.append(tool)
+    return results
 
 
 def _get_tool_description(tool_dir: str) -> str:
-    """Get tool description from manual registry, fallback to README."""
+    """Get tool description from health_config.yaml, fallback to README."""
     name = os.path.basename(tool_dir)
 
-    # Use manual description if available
-    if name in TOOL_DESCRIPTIONS:
-        return TOOL_DESCRIPTIONS[name]
+    # health_config.yaml から取得
+    descriptions = _load_yaml_descriptions()
+    if name in descriptions:
+        return descriptions[name]
 
     # Fallback: README title
     readme = os.path.join(tool_dir, "README.md")
@@ -108,12 +174,17 @@ def scan_tools(since: datetime | None = None) -> list[dict]:
         # If the tool was created within the scan period, it's "新規"
         is_new = created >= since
 
-        results.append({
+        tool_info = {
             "name": entry,
             "description": _get_tool_description(tool_dir),
             "status": "新規" if is_new else "更新",
             "last_modified": last_modified,
-        })
+        }
+        # Merge catalog data if available
+        catalog_entry = get_catalog_entry(entry)
+        if catalog_entry:
+            tool_info["catalog"] = catalog_entry
+        results.append(tool_info)
 
     return results
 
@@ -129,10 +200,14 @@ def get_all_tools() -> list[dict]:
         if not os.path.isdir(tool_dir) or entry in SKIP_DIRS or entry.startswith("."):
             continue
 
-        results.append({
+        tool_info = {
             "name": entry,
             "description": _get_tool_description(tool_dir),
             "last_modified": _latest_mtime(tool_dir),
-        })
+        }
+        catalog_entry = get_catalog_entry(entry)
+        if catalog_entry:
+            tool_info["catalog"] = catalog_entry
+        results.append(tool_info)
 
     return results

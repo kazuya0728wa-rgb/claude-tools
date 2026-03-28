@@ -15,3 +15,23 @@ credentials*.json
 token*.json
 *.key
 *.pem
+
+# === ツールディレクトリ（デフォルト非公開）===
+# 「コードが欲しい」リクエスト時に git add -f で個別push
+3link/
+ai-tracker/
+ai-tracker-gh/
+asin-scraper/
+auto-classify/
+contract-generator/
+discord-sedori/
+flowsync-lp/
+gmail-sender/
+purchase-tracker/
+sheets/
+smart-claude/
+transcribe-tool/
+work-manager/
+
+# === 常時公開（共有インフラ）===
+# claude-monitor, tool-hub, tool-health-monitor はgit管理を維持

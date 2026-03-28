@@ -1,0 +1,217 @@
+# ツール共有カタログ — Discord カード表示用の詳細情報
+# health_config.yaml の description は1行のヘルスチェック用
+# こちらはカード表示用の充実した情報を管理
+
+tools:
+  asin-scraper:
+    name: "ASIN付属品自動調査ツール"
+    summary: "ASINからAmazon・メーカー公式の付属品情報を自動調査"
+    detail: |
+      Amazon商品のASINを入力すると、メーカー説明書・公式製品ページ・
+      Amazonページを優先順位付きで調査し、付属品情報をスプレッドシートに自動記録。
+      既存データの上書き保護や「別売品」除外フィルタも搭載。
+    features:
+      - "ASIN正当性チェック"
+      - "メーカー優先の調査ロジック"
+      - "スプレッドシート自動記録"
+      - "根拠URL付き"
+    tech: "Python / Google Sheets API / Web Scraping"
+    shareable: true
+
+  contract-generator:
+    name: "契約書PDF自動生成ツール"
+    summary: "業務委託契約書をテンプレートからPDF自動生成"
+    detail: |
+      Webフォームまたはコマンドラインから受託者情報を入力すると、
+      テンプレートdocxに流し込みPDFを自動生成。
+      有効期間の自動計算機能付き。Flask Webアプリ（port 5050）で操作。
+    features:
+      - "Webフォーム入力（ブラウザ操作）"
+      - "docxテンプレート置換"
+      - "自動PDF変換"
+      - "契約期間自動計算"
+    tech: "Python / Flask / python-docx / docx2pdf"
+    shareable: true
+
+  ai-tracker:
+    name: "AI最新情報自動追跡システム"
+    summary: "主要AIサービスの最新情報を自動収集しDiscordに通知"
+    detail: |
+      5カテゴリ（LLM・コーディング・画像動画・音声・新規）のAI情報を
+      自動収集・AI要約してDiscordにEmbed形式で通知。
+      SHA256差分検出で既出ニュースを自動除外。30日間の履歴を保持。
+    features:
+      - "5カテゴリ別AI情報追跡"
+      - "X/Twitter・公式ブログ・RSS収集"
+      - "SHA256差分検出"
+      - "Discord Embed通知"
+      - "30日間履歴保持"
+    tech: "Python / Claude API / Discord Webhook"
+    shareable: true
+
+  ai-tracker-gh:
+    name: "AI情報ダイジェスト（GitHub Actions版）"
+    summary: "GitHub Actionsで毎日自動実行、DeepSeekで要約してDiscordに送信"
+    detail: |
+      DuckDuckGoでX(Twitter)のバズ投稿を優先取得し、
+      公式ブログRSSも定期収集。DeepSeek APIでTop5厳選・日本語要約。
+      GitHub Actionsで完全自動化、Bot不要のスタンドアロン版。
+    features:
+      - "DuckDuckGo X検索（バズ優先）"
+      - "公式ブログRSS収集"
+      - "DeepSeek API自動要約"
+      - "Discord Embed送信"
+      - "GitHub Actions自動実行"
+    tech: "Python / OpenAI SDK (DeepSeek) / duckduckgo-search / GitHub Actions"
+    shareable: true
+
+  flowsync-lp:
+    name: "FlowSync ランディングページ"
+    summary: "Next.js + Tailwind + Framer MotionのモダンなLP"
+    detail: |
+      ダークモード対応・スクロールアニメーション・レスポンシブ設計の
+      高品質ランディングページ。機能・料金・導入事例・FAQセクション搭載。
+      Radix UI・Recharts・Lucideアイコンを統合。
+    features:
+      - "ダークモード/ライトモード切替"
+      - "Framer Motionアニメーション"
+      - "レスポンシブデザイン"
+      - "セクション式コンテンツ"
+    tech: "Next.js 14 / React 18 / TypeScript / Tailwind CSS / Framer Motion"
+    shareable: true
+
+  smart-claude:
+    name: "Smart Claude 継続学習システム"
+    summary: "Claude Codeの操作データから自動学習・エラー解決策を蓄積"
+    detail: |
+      ツール実行後のフックでエラー記録・使用頻度追跡・コードパターン学習を自動実行。
+      セッション終了時に振り返りサマリー・意図予測を生成。
+      9つのデータ収集モジュール + 4つの分析エンジンで構成。
+    features:
+      - "エラー自動学習（解決策蓄積）"
+      - "コマンド使用頻度トラッキング"
+      - "セッション振り返りサマリー"
+      - "ユーザー意図予測"
+      - "スキル候補自動生成"
+    tech: "Python / Hook System / JSON"
+    shareable: true
+
+  work-manager:
+    name: "プロジェクト・タスク管理ダッシュボード"
+    summary: "プロジェクト・タスク・セッション履歴を一元管理するWebアプリ"
+    detail: |
+      プロジェクト（事業系・自動化・学業等カテゴリ別）、
+      タスク（優先度・ステータス・タグ付き）、セッション記録を管理。
+      REST APIで全CRUD操作、JSONベースの永続化。
+    features:
+      - "プロジェクト管理（カテゴリ別）"
+      - "タスク管理（優先度・ステータス）"
+      - "セッション記録・プロジェクト推定"
+      - "REST API完備"
+    tech: "Next.js 14 / React 18 / TypeScript / JSON"
+    shareable: true
+
+  transcribe-tool:
+    name: "動画音声文字起こし＆要約ツール"
+    summary: "YouTube等の動画から文字起こし→話者分離→AI要約を自動生成"
+    detail: |
+      動画URLからyt-dlpで音声抽出、Whisperで文字起こし（言語自動判定）、
+      pyannoteで話者分離、DeepSeek APIで日本語要約を自動生成。
+      概要・トピック・結論形式で出力。
+    features:
+      - "YouTube動画URL対応"
+      - "Whisper文字起こし（言語自動判定）"
+      - "話者分離（pyannote）"
+      - "DeepSeek自動要約"
+    tech: "Python / OpenAI Whisper / pyannote / yt-dlp / DeepSeek API"
+    shareable: true
+
+  purchase-tracker:
+    name: "仕入れ自動記録Chrome拡張"
+    summary: "フリマ購入を自動検知しスプレッドシートに記録"
+    detail: |
+      Chrome拡張がメルカリ・ラクマ等の購入完了ページを監視し、
+      商品名・価格・出品者をGAS WebApp経由でスプレッドシートに自動記録。
+      16+アカウント対応、利益見込み自動計算付き。
+    features:
+      - "複数フリマサイト対応"
+      - "Chrome拡張自動検知"
+      - "GAS WebApp中継"
+      - "利益見込み自動計算"
+    tech: "JavaScript (Chrome Extension) / Google Apps Script / Sheets API"
+    shareable: true
+
+  gmail-sender:
+    name: "Gmail自動送信ツール"
+    summary: "Gmail APIでプログラムからメール送信（複数アカウント対応）"
+    detail: |
+      OAuth認証でGmail APIに接続し、CLIコマンドでメール送信。
+      from_email指定で複数アカウント対応。
+      UTF-8対応、MIME形式でbase64 rawメッセージ送信。
+    features:
+      - "複数アカウント対応"
+      - "CLIコマンド実行"
+      - "UTF-8日本語対応"
+      - "Gmail API連携"
+    tech: "Python / Gmail API / OAuth2"
+    shareable: true
+
+  discord-sedori:
+    name: "せどり物販Discordサーバー構築ツール"
+    summary: "ロール・チャンネル・権限を自動セットアップ"
+    detail: |
+      せどり物販チーム用のDiscordサーバー構造を自動構築。
+      3種類のロール（オーナー・仕入担当・出品担当）、
+      5カテゴリ15+チャンネルを権限設定付きで一括作成。
+    features:
+      - "ロール自動作成（3種類・色分け）"
+      - "カテゴリ別チャンネル構成"
+      - "権限管理（役割別アクセス制御）"
+      - "読み取り専用チャンネル設定"
+    tech: "Python / Discord.py"
+    shareable: true
+
+  auto-classify:
+    name: "ダウンロードフォルダ自動分類"
+    summary: "Downloadsフォルダのファイルをカテゴリ別に自動振り分け"
+    detail: |
+      ファイル名と拡張子で30以上のカテゴリに自動分類。
+      就職活動・物販・大学課題・インターン相談会など
+      用途別フォルダに自動移動。分類ログ記録付き。
+    features:
+      - "拡張子ベース分類"
+      - "ファイル名キーワード判定（30+ルール）"
+      - "分類ログ記録"
+      - "移動実績トラッキング"
+    tech: "PowerShell / Python"
+    shareable: true
+
+  3link:
+    name: "スリーンク統合管理ツール"
+    summary: "案件管理・依頼者管理・クライアント管理を一元化"
+    detail: |
+      Google Sheetsをデータベースとして案件番号中心の管理システム。
+      GAS WebAppでブラウザ操作、案件の状態管理
+      （発注中→納品待ち→承認待ち→請求待ち→支払済み）が可能。
+    features:
+      - "案件番号自動生成"
+      - "マスターデータ管理"
+      - "WebApp画面（発注・成果物提出）"
+      - "LINE自動発注文章生成"
+    tech: "Python / Google Apps Script / Sheets API"
+    shareable: false
+
+  sheets:
+    name: "Google Sheets & GAS 統合管理"
+    summary: "複数GoogleスプレッドシートプロジェクトをPython CLIで一元管理"
+    detail: |
+      日報提出＆ランキング、稼働管理表の2プロジェクトを搭載。
+      OAuth認証共通化。GAS APIでコード更新→デプロイ、
+      Sheets APIでread/write/formula実行。
+    features:
+      - "複数プロジェクト一元管理"
+      - "GAS API push（コードデプロイ）"
+      - "Sheets API操作"
+      - "OAuth共通認証"
+    tech: "Python / Sheets API / Apps Script API / OAuth2"
+    shareable: false
