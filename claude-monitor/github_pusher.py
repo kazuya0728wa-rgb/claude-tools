@@ -94,7 +94,7 @@ async def push_tool(tool_name: str) -> tuple[bool, str]:
             return False, f"git commit 失敗: {out}"
 
     # Push
-    rc, out = await _run_git("push", "origin", "main")
+    rc, out = await _run_git("push", "origin", "master")
     if rc != 0:
         log.error(f"git push failed: {out}")
         return False, f"git push 失敗: {out}"
@@ -104,7 +104,7 @@ async def push_tool(tool_name: str) -> tuple[bool, str]:
     base_url = GITHUB_REPO_URL.rstrip("/")
     if base_url.endswith(".git"):
         base_url = base_url[:-4]
-    github_url = f"{base_url}/tree/main/{tool_name}"
+    github_url = f"{base_url}/tree/master/{tool_name}"
 
     # Record as shared
     shared[tool_name] = github_url
