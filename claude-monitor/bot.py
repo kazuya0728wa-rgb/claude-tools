@@ -41,7 +41,13 @@ from formatter import (
     build_waiting_embed,
 )
 from github_pusher import get_tool_github_url, is_tool_shared, push_tool
-from tool_tracker import get_all_tools, get_shareable_tools, scan_tools
+from tool_tracker import (
+    get_all_tools,
+    get_shareable_tools,
+    mark_notified,
+    scan_tools,
+    should_notify,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -348,22 +354,42 @@ class MonitorBot(discord.Client):
         @self.tree.command(name="digest", description="今日のツール活動レポートを手動送信")
         async def digest_cmd(interaction: discord.Interaction):
             tools = scan_tools()
-            embed = build_daily_digest_embed(USER_DISPLAY_NAME, tools)
-            await interaction.response.send_message(embed=embed)
-            # Send individual tool cards with buttons
+            # Filter: only tools that should be notified
+            to_notify = []
             for tool in tools:
+                notify, reason = should_notify(tool["name"])
+                if notify:
+                    tool["notify_reason"] = reason
+                    to_notify.append(tool)
+
+            if not to_notify:
+                await interaction.response.send_message(
+                    embed=discord.Embed(
+                        title=f"\U0001f6e0\ufe0f {USER_DISPLAY_NAME}のツール活動",
+                        description="新しく通知するツールはありません。",
+                        color=0x95A5A6,
+                    )
+                )
+                return
+
+            await interaction.response.send_message(
+                f"\U0001f6e0\ufe0f **{USER_DISPLAY_NAME}のツール活動** — {len(to_notify)}件"
+            )
+            for tool in to_notify:
                 catalog = tool.get("catalog")
                 if catalog:
                     card_data = dict(catalog)
                     card_data["key"] = tool["name"]
                     card_data["shared"] = is_tool_shared(tool["name"])
                     card_data["github_url"] = get_tool_github_url(tool["name"]) or ""
+                    card_data["notify_reason"] = tool.get("notify_reason", "")
                     card_embed = build_tool_card_embed(card_data)
                     if catalog.get("shareable", False):
                         view = ToolCardView(tool["name"])
                         await interaction.channel.send(embed=card_embed, view=view)
                     else:
                         await interaction.channel.send(embed=card_embed)
+                    mark_notified(tool["name"], catalog)
 
         @self.tree.command(name="catalog", description="共有可能なツールカタログを表示")
         async def catalog_cmd(interaction: discord.Interaction):
@@ -397,33 +423,51 @@ class MonitorBot(discord.Client):
         log.info(f"Daily digest scheduler started (JST {DAILY_DIGEST_HOUR:02d}:{DAILY_DIGEST_MINUTE:02d})")
 
     async def _send_daily_digest(self):
-        """Send the daily tool digest to the share channel with card embeds."""
+        """Send the daily tool digest to the share channel.
+
+        Only notifies about genuinely new tools or tools with significant
+        catalog changes. Previously notified tools are skipped.
+        """
         channel = await self.get_share_channel_safe()
         if not channel:
             log.warning("Tool share channel not found, skipping digest")
             return
 
         tools = scan_tools()
-        # Summary embed
-        embed = build_daily_digest_embed(USER_DISPLAY_NAME, tools)
-        await channel.send(embed=embed)
 
-        # Individual tool cards with buttons
+        # Filter: only tools that need notification
+        to_notify = []
         for tool in tools:
+            notify, reason = should_notify(tool["name"])
+            if notify:
+                tool["notify_reason"] = reason
+                to_notify.append(tool)
+
+        if not to_notify:
+            log.info("Daily digest: no new tools to notify")
+            return
+
+        # Send only the cards (no separate summary embed)
+        header = f"\U0001f6e0\ufe0f **{USER_DISPLAY_NAME}のツール活動** — {len(to_notify)}件"
+        await channel.send(header)
+
+        for tool in to_notify:
             catalog = tool.get("catalog")
             if catalog:
                 card_data = dict(catalog)
                 card_data["key"] = tool["name"]
                 card_data["shared"] = is_tool_shared(tool["name"])
                 card_data["github_url"] = get_tool_github_url(tool["name"]) or ""
+                card_data["notify_reason"] = tool.get("notify_reason", "")
                 card_embed = build_tool_card_embed(card_data)
                 if catalog.get("shareable", False):
                     view = ToolCardView(tool["name"])
                     await channel.send(embed=card_embed, view=view)
                 else:
                     await channel.send(embed=card_embed)
+                mark_notified(tool["name"], catalog)
 
-        log.info(f"Daily digest sent: {len(tools)} tools reported")
+        log.info(f"Daily digest sent: {len(to_notify)} new tools notified")
 
     async def on_ready(self):
         log.info(f"Bot ready: {self.user} (guild={DISCORD_GUILD_ID}, channel={DISCORD_CHANNEL_ID})")

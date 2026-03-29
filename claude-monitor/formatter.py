@@ -374,9 +374,15 @@ def build_tool_card_embed(tool: dict) -> discord.Embed:
     tech = tool.get("tech", "")
     shared = tool.get("shared", False)
     github_url = tool.get("github_url", "")
+    notify_reason = tool.get("notify_reason", "")
 
-    # Title with shared indicator
-    title = f"\U0001f6e0\ufe0f {name}"
+    # Title with badge
+    badge = ""
+    if notify_reason == "新規":
+        badge = " \U0001f195"
+    elif notify_reason == "機能追加":
+        badge = " \U0001f199"
+    title = f"\U0001f6e0\ufe0f {name}{badge}"
 
     # Description: summary + detail
     desc_parts = []

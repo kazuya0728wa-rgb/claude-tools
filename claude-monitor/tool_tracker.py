@@ -1,5 +1,7 @@
 """Scan tools/ directory and detect new/updated tools for daily digest."""
 
+import hashlib
+import json
 import os
 from datetime import datetime, timezone, timedelta
 
@@ -86,6 +88,71 @@ def get_shareable_tools() -> list[dict]:
             tool["key"] = key
             results.append(tool)
     return results
+
+
+# ---------------------------------------------------------------------------
+# Notification History — track what's been notified to avoid duplicates
+# ---------------------------------------------------------------------------
+
+NOTIFIED_FILE = os.path.join(os.path.dirname(__file__), "notified_tools.json")
+
+
+def _catalog_hash(entry: dict) -> str:
+    """Hash catalog entry's key fields to detect significant changes."""
+    parts = [
+        entry.get("summary", ""),
+        entry.get("detail", ""),
+        "|".join(entry.get("features", [])),
+        entry.get("tech", ""),
+    ]
+    return hashlib.sha256("|".join(parts).encode("utf-8")).hexdigest()[:16]
+
+
+def _load_notified() -> dict:
+    if os.path.exists(NOTIFIED_FILE):
+        try:
+            with open(NOTIFIED_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+
+def _save_notified(data: dict) -> None:
+    with open(NOTIFIED_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def mark_notified(tool_name: str, catalog_entry: dict | None = None) -> None:
+    """Record that a tool has been notified."""
+    data = _load_notified()
+    data[tool_name] = {
+        "notified_at": datetime.now(JST).isoformat(),
+        "catalog_hash": _catalog_hash(catalog_entry) if catalog_entry else "",
+    }
+    _save_notified(data)
+
+
+def should_notify(tool_name: str) -> tuple[bool, str]:
+    """Check if a tool should be notified.
+
+    Returns:
+        (should_notify, reason) — reason is "新規", "機能追加", or ""
+    """
+    catalog_entry = get_catalog_entry(tool_name)
+    notified = _load_notified()
+
+    if tool_name not in notified:
+        return True, "新規"
+
+    # Already notified — check if catalog content changed significantly
+    if catalog_entry:
+        old_hash = notified[tool_name].get("catalog_hash", "")
+        new_hash = _catalog_hash(catalog_entry)
+        if old_hash and new_hash != old_hash:
+            return True, "機能追加"
+
+    return False, ""
 
 
 def _get_tool_description(tool_dir: str) -> str:
