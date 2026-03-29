@@ -1,100 +1,131 @@
-# ツール共有セットアップガイド（Claude Code ユーザー向け）
+# ツール共有システム セットアップ手順（Claude Code 実行用）
 
-## 概要
-このシステムで、自分が作ったツールをDiscordでカード形式で紹介できます。
-「📥 コードが欲しい」ボタンでリクエストされた時だけGitHubに公開されます。
+> **このファイルは友達のClaude Codeが読んで自動実行するための手順書です。**
+> 友達が「このガイドに従ってツール共有をセットアップして」と指示すれば、
+> Claude Code がほぼ全自動でセットアップします。
 
-**全員がClaude Codeを使う前提の構成です。**
+---
 
-```
-あなたのPC
-├── .claude/tools/           ← あなたのツール置き場
-│   ├── claude-monitor/      ← Discord Bot（ここをセットアップ）
-│   │   ├── bot.py           ← メインBot
-│   │   ├── hooks/           ← Claude Code フック
-│   │   ├── tool_catalog.yaml← あなたのツールカタログ
-│   │   └── start.bat        ← 起動用（自分で作る）
-│   ├── your-tool-1/         ← あなたのツール
-│   └── your-tool-2/
-│
-└── Discord 共有サーバー
-    ├── #ツール共有           ← 全員のカタログが投稿される
-    └── #あなた用モニター      ← あなた専用の作業通知
+## 前提
+- Claude Code が動作している
+- Python 3.11+、Git がインストール済み
+- Discordアカウントがある（共有サーバー: ID `1475066261841903650` に参加済み）
+- GitHubアカウントがある
+- Playwright MCP が使える（Discord Bot 作成の自動化に必要）
+
+---
+
+## Phase 1: リポのクローン & ファイル配置
+
+```bash
+# 1. テンプレートリポをクローン
+git clone https://github.com/kazuya0728wa-rgb/claude-tools.git /tmp/claude-tools-template
+
+# 2. tools ディレクトリを作成（なければ）
+mkdir -p ~/.claude/tools
+
+# 3. claude-monitor をコピー
+cp -r /tmp/claude-tools-template/claude-monitor ~/.claude/tools/claude-monitor
+
+# 4. friend-template の内容で上書き（クリーンなhooks・カタログ雛形）
+cp -f ~/.claude/tools/claude-monitor/friend-template/hooks/* ~/.claude/tools/claude-monitor/hooks/
+cp -f ~/.claude/tools/claude-monitor/friend-template/tool_catalog.yaml ~/.claude/tools/claude-monitor/tool_catalog.yaml
+cp -f ~/.claude/tools/claude-monitor/friend-template/.gitignore ~/.claude/tools/
+
+# 5. 依存インストール
+pip install -r ~/.claude/tools/claude-monitor/requirements.txt
+
+# 6. テンプレート削除
+rm -rf /tmp/claude-tools-template
 ```
 
 ---
 
-## Step 1: 前提条件
-- Claude Code が使える状態
-- Python 3.11+
-- Git
-- Discordアカウント（共有サーバーに参加済み）
-- GitHubアカウント
+## Phase 2: Discord Bot 作成（Playwright で自動化）
 
-## Step 2: Discord Bot を作成
-1. https://discord.com/developers/applications → 「New Application」
-2. 名前: `CC Monitor - あなたの名前`
-3. 「Bot」→「Reset Token」→ **トークンをコピー**（後で使う）
-4. 「Bot」→「MESSAGE CONTENT INTENT」を **ON**
-5. 「OAuth2」→「URL Generator」
-   - Scopes: `bot`, `applications.commands`
-   - Permissions: `Send Messages`, `Embed Links`, `Use Slash Commands`
-6. 生成されたURLをブラウザで開き、**共有サーバーに追加**
+ユーザーに以下を確認:
+- 「Discordにブラウザでログインしてください。ログインできたら教えてください。」
 
-## Step 3: フォルダ構成を作る
+ログイン確認後、Playwright で以下を実行:
 
-Claude Code に以下を指示してください:
+1. `https://discord.com/developers/applications` に遷移
+2. 「New Application」ボタンをクリック
+3. 名前に `CC Monitor - {ユーザー名}` を入力して作成
+4. 左メニュー「Bot」を開く
+5. 「Reset Token」→ トークンをコピーして変数に保存
+6. 「MESSAGE CONTENT INTENT」トグルを ON にして Save
+7. 左メニュー「OAuth2」→「URL Generator」を開く
+8. Scopes: `bot` と `applications.commands` にチェック
+9. Bot Permissions: `Send Messages`, `Embed Links`, `Use Slash Commands` にチェック
+10. 生成されたURLをコピー
+11. そのURLに遷移して、共有サーバー（ID: `1475066261841903650`）にBotを追加
 
-```
-かずやの claude-tools リポから claude-monitor をクローンして、
-自分の .claude/tools/ にセットアップして。
-テンプレートは friend-template/ にある。
+**取得すべき値:**
+- `BOT_TOKEN` — Step 5 で取得
+- `GUILD_ID` — `1475066261841903650`（共有サーバー、固定）
+- `TOOL_SHARE_CHANNEL_ID` — `1486204546370899978`（ツール共有チャンネル、固定）
 
-リポ: https://github.com/kazuya0728wa-rgb/claude-tools
-```
+**ユーザーに確認すべき値:**
+- `USER_NAME` — 「Discord上で表示する名前は何にしますか？」
+- `MONITOR_CHANNEL_ID` — 「あなた専用のモニターチャンネルを作りますか？それとも既存のチャンネルIDがありますか？」
+  - 新規作成の場合: Discord API (`POST /guilds/{guild_id}/channels`) で作成可能
 
-**Claude Code がやってくれること:**
-1. リポをクローン
-2. `claude-monitor/` を `~/.claude/tools/` にコピー
-3. `friend-template/` の内容（クリーンなhooks・カタログ雛形）で上書き
-4. `pip install -r requirements.txt`
+---
 
-## Step 4: 自分のGitHubリポを準備
+## Phase 3: GitHubリポ作成
 
 ```bash
 cd ~/.claude/tools
+
+# git 初期化
 git init
-git remote add origin https://github.com/あなた/あなたのリポ.git
+git add .gitignore
+git commit -m "Initial commit"
 ```
 
-`.gitignore` は `friend-template/` に入っているものを使ってください。
-自分のツールディレクトリを `.gitignore` に追加:
+ユーザーに確認:
+- 「GitHubにツール共有用のリポジトリを作成します。リポジトリ名は何にしますか？（例: my-claude-tools）」
 
-```gitignore
-# 自分のツール（デフォルト非公開）
-my-tool-1/
-my-tool-2/
+`gh` CLI でリポ作成:
+```bash
+gh repo create {リポ名} --private --source=. --remote=origin --push
 ```
 
-## Step 5: start.bat を設定
+取得した値: `GITHUB_URL` — `https://github.com/{ユーザー名}/{リポ名}`
 
-`claude-monitor/start.bat` を編集:
+---
 
-| 変数 | 値 |
-|---|---|
-| `CLAUDE_MONITOR_DISCORD_TOKEN` | Step 2 でコピーしたBotトークン |
-| `CLAUDE_MONITOR_CHANNEL_ID` | あなた専用のモニターチャンネルID |
-| `CLAUDE_MONITOR_GUILD_ID` | 共有サーバーのID |
-| `TOOL_SHARE_CHANNEL_ID` | `1486204546370899978`（共有チャンネル・全員共通） |
-| `TOOL_SHARE_USER_NAME` | あなたの名前 |
-| `TOOL_SHARE_GITHUB_URL` | あなたのGitHubリポURL |
+## Phase 4: start.bat 生成
 
-> start.bat は .gitignore に入っているのでGitHubに公開されません
+Phase 2, 3 で取得した値を使って `start.bat` を生成:
 
-## Step 6: Claude Code のフックを設定
+```bat
+@echo off
+chcp 65001 >nul
 
-Claude Code の設定ファイル `~/.claude/settings.json` に以下を追加:
+set CLAUDE_MONITOR_DISCORD_TOKEN={BOT_TOKEN}
+set CLAUDE_MONITOR_CHANNEL_ID={MONITOR_CHANNEL_ID}
+set CLAUDE_MONITOR_GUILD_ID=1475066261841903650
 
+set TOOL_SHARE_CHANNEL_ID=1486204546370899978
+set TOOL_SHARE_USER_NAME={USER_NAME}
+set TOOL_SHARE_GITHUB_URL={GITHUB_URL}
+
+cd /d "%~dp0"
+python bot.py
+pause
+```
+
+保存先: `~/.claude/tools/claude-monitor/start.bat`
+
+---
+
+## Phase 5: Claude Code フック設定
+
+ユーザーの `~/.claude/settings.json` にフックを追加。
+**既存の設定がある場合はマージすること（上書き厳禁）。**
+
+追加するフック:
 ```json
 {
   "hooks": {
@@ -135,61 +166,61 @@ Claude Code の設定ファイル `~/.claude/settings.json` に以下を追加:
 }
 ```
 
-## Step 7: ツールカタログを作成
+> Windows の場合、パスは `C:/Users/{ユーザー名}/.claude/tools/claude-monitor/hooks/xxx.py` の形式に変換すること。
 
-`claude-monitor/tool_catalog.yaml` を編集して自分のツールを登録:
+---
 
+## Phase 6: ツールカタログ作成
+
+ユーザーに確認:
+- 「共有したいツールはありますか？ツール名と簡単な説明を教えてください。」
+- 回答をもとに `~/.claude/tools/claude-monitor/tool_catalog.yaml` を生成
+
+カタログのフォーマット:
 ```yaml
 tools:
-  my-awesome-tool:
-    name: "すごいツール"
-    summary: "1行で何ができるか"
+  {tool-dir-name}:
+    name: "表示名"
+    summary: "1行の概要"
     detail: |
-      2-3行の詳細。何が便利か、
-      どう使うか。
+      2-3行の詳細説明。
     features:
-      - "機能A"
-      - "機能B"
-      - "機能C"
-    tech: "Python / Flask"
+      - "機能1"
+      - "機能2"
+      - "機能3"
+    tech: "使用技術"
     shareable: true
 ```
 
-## Step 8: 起動 & 確認
-
-```bash
-# Bot起動
-cd ~/.claude/tools/claude-monitor
-start.bat
+ツールディレクトリを `.gitignore` にも追加:
+```
+{tool-dir-name}/
 ```
 
-Discordで確認:
-- `/catalog` → 自分のツールカタログをカード表示
-- `/digest` → 未通知ツールのみ送信
-- `/tools` → 全ツール一覧
+---
+
+## Phase 7: 起動 & 動作確認
+
+```bash
+cd ~/.claude/tools/claude-monitor
+# Windows: start.batを実行
+# それ以外:
+python bot.py
+```
+
+確認事項:
+1. `curl http://127.0.0.1:19876/health` が `{"status": "running"}` を返すか
+2. Discordで `/catalog` コマンドが動作するか
+3. カードが「ツール共有」チャンネルに表示されるか
 
 ---
 
-## 日常の使い方
+## ユーザーへの最終報告
 
-### 新しいツールを作った時
-1. `tool_catalog.yaml` にエントリ追加
-2. `/digest` で手動送信 or 毎朝8時に自動通知
+セットアップ完了後、以下を伝える:
 
-### ツールに大きな機能追加した時
-1. `tool_catalog.yaml` の `features` / `detail` を更新
-2. 変更を自動検知 → 🆙 バッジ付きで再通知
-
-### 「コードが欲しい」と言われた時
-→ ボタンが自動処理（git add -f → push → GitHubリンク返信）
-
----
-
-## トラブルシューティング
-
-| 問題 | 対処 |
-|---|---|
-| 「インタラクションに失敗しました」 | Botが起動していない → `start.bat` を実行 |
-| ボタンでpush失敗 | `TOOL_SHARE_GITHUB_URL` を確認 / `git remote -v` を確認 |
-| 通知履歴をリセットしたい | `notified_tools.json` を削除 |
-| カタログが反映されない | Bot再起動（カタログはキャッシュされる） |
+- Bot名: `CC Monitor - {ユーザー名}`
+- 使えるコマンド: `/catalog`, `/digest`, `/tools`
+- ツール追加方法: `tool_catalog.yaml` を編集 → `/digest` で通知
+- Bot起動方法: `start.bat` を実行
+- 「コードが欲しい」ボタン: Bot起動中のみ動作
