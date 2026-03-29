@@ -1,0 +1,23 @@
+__pycache__/
+*.pyc
+*.pyo
+node_modules/
+.next/
+.env
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Sensitive files
+start.bat
+credentials*.json
+token*.json
+*.key
+*.pem
+
+# === ツールディレクトリ（デフォルト非公開）===
+# 「コードが欲しい」リクエスト時に git add -f で個別push
+# ここに自分のツールディレクトリを追加:
+# my-tool-1/
+# my-tool-2/
