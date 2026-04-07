@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="1回目面談用日報">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#FF7043">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23FF7043'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='white'>📋</text></svg>">
+<title>1回目面談用日報</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary:    #FF7043;
+    --primary-dk: #E64A19;
+    --primary-lt: #FBE9E7;
+    --accent:     #FFB74D;
+    --green:      #2e7d32;
+    --green-lt:   #e8f5e9;
+    --red:        #c62828;
+    --red-lt:     #ffebee;
+    --bg:         #f5f5f5;
+    --card:       #ffffff;
+    --border:     #e0e0e0;
+    --text:       #212121;
+    --text-sub:   #757575;
+  }
+
+  body {
+    font-family: -apple-system, 'Hiragino Sans', 'Meiryo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* ─── ヘッダー ─── */
+  header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dk) 100%);
+    color: #fff;
+    padding: 0 20px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 17px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .header-logo {
+    width: 30px; height: 30px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+
+  /* ─── メイン ─── */
+  main { max-width: 560px; margin: 0 auto; padding: 20px 16px 32px; }
+
+  /* ─── PC用の微調整 ─── */
+  @media (min-width: 600px) {
+    header { height: 56px; font-size: 18px; }
+    .header-logo { width: 34px; height: 34px; font-size: 18px; }
+    main { padding: 24px 20px 40px; }
+    .card { padding: 20px; margin-bottom: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .section-title { font-size: 14px; border-left-width: 4px; }
+    .checkbox-item:hover { background: var(--primary-lt); }
+    .submit-btn { box-shadow: 0 4px 12px rgba(255,112,67,0.3); }
+    .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255,112,67,0.4); }
+    .footer { font-size: 12px; }
+  }
+
+  /* ─── 基本情報: PC時は日付・氏名を横並び ─── */
+  .basic-row { display: block; }
+  @media (min-width: 600px) {
+    .basic-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  }
+
+  /* ─── メッセージ ─── */
+  #msg {
+    display: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  #msg.success { background: var(--green-lt); color: var(--green); }
+  #msg.error   { background: var(--red-lt); color: var(--red); }
+
+  /* ─── カード ─── */
+  .card {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--primary);
+    border-left: 3px solid var(--primary);
+    padding-left: 8px;
+    margin-bottom: 14px;
+  }
+
+  /* ─── フィールド ─── */
+  .field { margin-bottom: 12px; }
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--text-sub);
+    margin-bottom: 4px;
+  }
+  label .req { color: var(--red); }
+
+  input[type=text], input[type=date], input[type=number], select, textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: inherit;
+    background: #fff;
+    color: var(--text);
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(255,112,67,0.15);
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23757575' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+  textarea { min-height: 80px; resize: vertical; }
+
+  /* ─── チェックボックス ─── */
+  .checkbox-group {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(255,112,67,0.1);
+  }
+  .checkbox-item:last-child { border-bottom: none; }
+  .checkbox-item:active { background: var(--primary-lt); }
+  .checkbox-item input[type=checkbox] {
+    width: 22px; height: 22px;
+    accent-color: var(--primary);
+    flex-shrink: 0;
+  }
+  .checkbox-item label {
+    margin: 0; font-size: 15px; font-weight: normal; color: var(--text); cursor: pointer;
+  }
+
+  /* ─── 数値入力グリッド ─── */
+  .num-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .num-cell { text-align: center; }
+  .num-cell label { font-size: 12px; text-align: center; margin-bottom: 3px; }
+  .num-cell input[type=number] {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    padding: 10px 4px;
+  }
+  .num-cell.highlight input {
+    border-color: var(--primary);
+    background: var(--primary-lt);
+  }
+
+  /* ─── バリデーション ─── */
+  .val-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    margin-top: 10px;
+    background: #fafafa;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--text-sub);
+  }
+  .val-summary .total { font-weight: bold; color: var(--text); }
+  .val-summary.match { border-color: #a5d6a7; background: #f1f8e9; }
+  .val-summary.mismatch { border-color: #ef9a9a; background: #fff8f8; }
+
+  /* ─── ボタン ─── */
+  .submit-btn {
+    width: 100%; padding: 16px;
+    background: var(--primary); color: #fff;
+    font-size: 17px; font-weight: bold; font-family: inherit;
+    border: none; border-radius: 10px;
+    cursor: pointer; margin-top: 6px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .submit-btn:active { background: var(--primary-dk); }
+  .submit-btn:disabled { background: #bdbdbd; }
+
+  /* ─── ローディング ─── */
+  .loading-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; flex-direction: column; gap: 12px;
+  }
+  .loading-overlay.hidden { display: none; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: var(--text-sub); }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">読み込み中...</div>
+</div>
+
+<header>
+  <div class="header-logo">📋</div>
+  <span>1回目面談用日報</span>
+</header>
+
+<main>
+<div id="msg"></div>
+<form id="form">
+
+  <div class="card">
+    <div class="section-title">基本情報</div>
+    <div class="basic-row">
+      <div class="field">
+        <label>日付<span class="req">*</span></label>
+        <input type="date" id="date" required>
+      </div>
+      <div class="field">
+        <label>氏名<span class="req">*</span></label>
+        <select id="name" required><option value="">---</option></select>
+      </div>
+    </div>
+    <div class="field">
+      <label>案件名<span class="req">*</span></label>
+      <div class="checkbox-group" id="caseCheckboxes"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">商談結果</div>
+    <div class="num-grid">
+      <div class="num-cell highlight"><label>商談数<span class="req">*</span></label><input type="number" id="deals" value="0" min="0"></div>
+      <div class="num-cell"><label>引き上げ数</label><input type="number" id="hikitage" value="0" min="0"></div>
+      <div class="num-cell"><label>失注数</label><input type="number" id="losses" value="0" min="0"></div>
+      <div class="num-cell"><label>損切数</label><input type="number" id="cuts" value="0" min="0"></div>
+      <div class="num-cell"><label>キャンセル</label><input type="number" id="cancel" value="0" min="0"></div>
+      <div class="num-cell"><label>継続・2回目</label><input type="number" id="repeat" value="0" min="0"></div>
+    </div>
+    <div class="val-summary" id="valSummary">
+      <span>合計: <span class="total" id="valTotal">0</span></span>
+      <span id="valStatus">─</span>
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <label>失注理由 / 録画URL</label>
+      <input type="text" id="lossReason" placeholder="失注の場合は理由または録画URLを入力">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">メモ</div>
+    <div class="field"><textarea id="memo" placeholder="自由記述"></textarea></div>
+  </div>
+
+  <button type="submit" class="submit-btn" id="submitBtn">送信する</button>
+</form>
+<div class="footer" style="text-align:center;padding:16px 0 4px;font-size:11px;color:var(--text-sub);">1回目面談用日報</div>
+</main>
+
+<script>
+var API_URL = 'https://script.google.com/macros/s/AKfycbz2dyEeZ8divO2Odf-EdTNiKcMTGjltZlben-AW7bWM8ObBC9BTRGwal5jivgSEZdOi/exec';
+var caseOptions = [];
+
+// 今日の日付
+(function() {
+  var t = new Date();
+  document.getElementById('date').value = t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0');
+})();
+
+// データ取得
+fetch(API_URL + '?action=getFormData')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var sel = document.getElementById('name');
+    sel.innerHTML = '<option value="">選択してください</option>';
+    data.members.forEach(function(n) {
+      var o = document.createElement('option');
+      o.value = n; o.textContent = n;
+      sel.appendChild(o);
+    });
+    caseOptions = data.cases || [];
+    var cont = document.getElementById('caseCheckboxes');
+    cont.innerHTML = '';
+    caseOptions.forEach(function(c, i) {
+      var d = document.createElement('div');
+      d.className = 'checkbox-item';
+      d.innerHTML = '<input type="checkbox" id="case_cb_'+i+'" name="case_cb" value="'+c+'">' +
+        '<label for="case_cb_'+i+'">'+c+'</label>';
+      d.addEventListener('click', function(e) {
+        if (e.target.tagName !== 'INPUT') {
+          d.querySelector('input[type=checkbox]').checked = !d.querySelector('input[type=checkbox]').checked;
+        }
+      });
+      cont.appendChild(d);
+    });
+    document.getElementById('loadingOverlay').classList.add('hidden');
+  })
+  .catch(function() {
+    document.getElementById('loadingOverlay').innerHTML = '<div style="color:#c62828;font-size:14px;">データ取得に失敗しました。<br>再読み込みしてください。</div>';
+  });
+
+// バリデーション
+['deals','hikitage','losses','cuts','cancel'].forEach(function(id) {
+  document.getElementById(id).addEventListener('input', updateVal);
+});
+function updateVal() {
+  var d = Number(document.getElementById('deals').value||0);
+  var h = Number(document.getElementById('hikitage').value||0);
+  var l = Number(document.getElementById('losses').value||0);
+  var c = Number(document.getElementById('cuts').value||0);
+  var k = Number(document.getElementById('cancel').value||0);
+  var sum = h+l+c+k;
+  document.getElementById('valTotal').textContent = sum;
+  var el = document.getElementById('valSummary');
+  var st = document.getElementById('valStatus');
+  el.classList.remove('match','mismatch');
+  if (d===0 && sum===0) { st.textContent = '─'; }
+  else if (d===sum) { el.classList.add('match'); st.textContent = '✓ 一致'; }
+  else { el.classList.add('mismatch'); st.textContent = '商談数: '+d+' ≠ 合計: '+sum; }
+}
+
+// 送信
+document.getElementById('form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var btn = document.getElementById('submitBtn');
+
+  var caseNames = [];
+  document.querySelectorAll('[name="case_cb"]:checked').forEach(function(cb) { caseNames.push(cb.value); });
+  if (caseNames.length === 0) { showMsg('案件名を1つ以上選択してください。','error'); return; }
+  var caseNamesStr = caseNames.join('・');
+
+  var deals=Number(document.getElementById('deals').value||0);
+  var cancel=Number(document.getElementById('cancel').value||0);
+  var hikitage=Number(document.getElementById('hikitage').value||0);
+  var losses=Number(document.getElementById('losses').value||0);
+  var cuts=Number(document.getElementById('cuts').value||0);
+  if (deals!==0 && deals!==cancel+hikitage+losses+cuts) { showMsg('商談数が合計と一致しません。','error'); return; }
+
+  btn.disabled = true; btn.textContent = '送信中...';
+
+  var payload = {
+    date: document.getElementById('date').value,
+    name: document.getElementById('name').value,
+    caseNames: caseNamesStr,
+    deals: document.getElementById('deals').value,
+    cancel: document.getElementById('cancel').value,
+    repeat: document.getElementById('repeat').value,
+    hikitage: document.getElementById('hikitage').value,
+    losses: document.getElementById('losses').value,
+    cuts: document.getElementById('cuts').value,
+    lossReason: document.getElementById('lossReason').value,
+    memo: document.getElementById('memo').value,
+  };
+
+  fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload),
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(res) {
+    if (res.success) {
+      showMsg('送信完了しました！','success');
+      document.getElementById('form').reset();
+      var t = new Date();
+      document.getElementById('date').value = t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+      updateVal();
+    } else {
+      showMsg('送信失敗: '+(res.error||'不明'),'error');
+    }
+    btn.disabled = false; btn.textContent = '送信する';
+  })
+  .catch(function() {
+    showMsg('通信エラー。再度お試しください。','error');
+    btn.disabled = false; btn.textContent = '送信する';
+  });
+});
+
+function showMsg(text, type) {
+  var el = document.getElementById('msg');
+  el.textContent = text; el.className = type; el.style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(function() { el.style.display = 'none'; }, 4000);
+}
+</script>
+</body>
+</html>
