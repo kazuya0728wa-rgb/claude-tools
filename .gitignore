@@ -42,3 +42,52 @@ browser_profiles/
 # デバッグ生成物
 debug_*.png
 *.pma
+
+# === 機密/ノイズ横断パターン（PUBLICリポ保護・2026-07-09追加）===
+# VPS接続情報・ローカル設定（平文パスワード等）
+vps*.json
+*.local.json
+# 設定スナップショット・調査キャッシュ（APIキー/機密混入の恐れ）
+snapshots/
+research_cache/
+# 実行ログ・pytestキャッシュ
+run.log
+monitor.log
+.pytest_cache/
+
+# === 未追跡ツール群（事業/個人・デフォルト非公開・2026-07-09仕分け）===
+# 精査で機密混在を確認済み。公開はツール単位の機密除去を伴う別作業とする
+backup-claude-config/
+deepseek-credit-monitor/
+ig-collector/
+invoice-generator/
+kpop-tracker/
+mf-asset-tracker/
+schedule-checker/
+sedori-x-tracker/
+shared/
+ship/
+site-blocker/
+slide-generator/
+split-cells/
+system/
+word-utils/
+
+# === 共有インフラ（精査結果: config/dataに私的ツールマップ・認証パス・アカウント名が混在）===
+# コードのみの切り出し公開は別の慎重な作業とし、この整理では非公開扱い
+claude-monitor/shared_tools.json
+tool-hub/
+tool-health-monitor/
+
+# === 埋め込みgitリポ（別リポで管理・claude-toolsには含めない）===
+claude-pace/
+compound-engineering/
+simone/
+ts-quality-hooks/
+
+# === ルート直下の個人スクリプト（PrintScreen/通知系）===
+check-prtsc.ps1
+restart-prtsc.ps1
+prtsc-remap.py
+notify-attention.ps1
+notify-complete.ps1
