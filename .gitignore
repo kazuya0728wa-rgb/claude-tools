@@ -35,3 +35,10 @@ work-manager/
 
 # === 常時公開（共有インフラ）===
 # claude-monitor, tool-hub, tool-health-monitor はgit管理を維持
+
+# === ブラウザプロファイル（ログインCookie/認証セッション・絶対コミット禁止）===
+browser_profiles/
+*/browser_profiles/
+# デバッグ生成物
+debug_*.png
+*.pma

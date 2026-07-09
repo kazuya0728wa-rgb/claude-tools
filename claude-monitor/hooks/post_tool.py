@@ -38,6 +38,16 @@ def main():
     except Exception:
         pass
 
+    # Smart Claude: インテリジェンス学習
+    try:
+        smart_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                 "..", "smart-claude")
+        sys.path.insert(0, os.path.abspath(smart_dir))
+        from smart_hook import handle_post_tool
+        handle_post_tool(data)
+    except Exception:
+        pass
+
     sys.exit(0)
 
 
